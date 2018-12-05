@@ -11,6 +11,7 @@ import { GoogleLogin } from 'react-google-login';
 import FacebookLogin from 'react-facebook-login';
 import LoadingSpinner from './LoadingSpinner';
 import ReCAPTCHA from "react-google-recaptcha";
+import AuthMail from './AuthMail';
 
 
 class Loginbody extends Component {
@@ -26,45 +27,52 @@ class Loginbody extends Component {
         password: ''
       },
       loading: false,
-      captcha: false
+      captcha: false,
+      ingreso_datos: false
     };
 
     this.onSubmit = this.onSubmit.bind(this);
     this.onChange = this.onChange.bind(this);
     this.responseGoogle = this.responseGoogle.bind(this);
     this.responseFacebook = this.responseFacebook.bind(this);
+    this.captchaReady = this.captchaReady.bind(this);
 
 
 
   }
   onSubmit(history) {
-    const { user } = this.state;
-    this.setState({ loading: true }, () => {
-      axios.post(`https://knowledge-community-back-end.herokuapp.com/sessions`, { email: user.email, password: user.password })
-        .then(response => {
-          this.setState({
-            loading: false,
-          })
-          const { token } = response.data.data.user.authentication_token;
-          sessionService.saveSession({ token })
-            .then(() => {
-              sessionService.saveUser(response.data.data.user)
-                .then(() => {
-                  history.push({ pathname: '/', state: { detail: response.data.data.user }});
-                }).catch(err => console.error(err));
-            }).catch(err => console.error(err));
-        }).catch(function (error) {
-          this.setState({
-            loading: false,
-          })
-          if (error.message.indexOf('500') !== -1) {
+    if (this.state.captcha) {
+      const { user } = this.state;
+      this.setState({ loading: true }, () => {
+        axios.post(`https://knowledge-community-back-end.herokuapp.com/sessions`, { email: user.email, password: user.password })
+          .then(response => {
             this.setState({
-              hasError: true,
+              token: response.data.data.user.authentication_token,
+              user: response.data.data.user,
               loading: false,
-            });
-          }
-        }.bind(this))
-    });
+              ingreso_datos: true,
+              errors: "email o contraseña incorrecto",
+            })
+
+          }).catch(function (error) {
+            this.setState({
+              loading: false,
+            })
+            if (error.message.indexOf('500') !== -1) {
+              this.setState({
+                hasError: true,
+                loading: false,
+              });
+            }
+          }.bind(this))
+      });
+    }else{
+      console.log(this.state);
+      this.setState({
+        hasError: true,
+        errors: 'Captcha fallido',
+      });
+    }
   }
 
 
@@ -74,12 +82,12 @@ class Loginbody extends Component {
     user[name] = value;
     this.setState({ user });
   }
-  responseGoogle = (response,history) => {
-    const {id_token} = response.tokenObj;
+  responseGoogle = (response, history) => {
+    const { id_token } = response.tokenObj;
 
-    const {email}=response.profileObj
-    const {name}=response.profileObj;
-    let query={"id_token":id_token,"email":email,"name":name};
+    const { email } = response.profileObj
+    const { name } = response.profileObj;
+    let query = { "id_token": id_token, "email": email, "name": name };
     this.setState({ loading: true }, () => {
       axios.post(`https://knowledge-community-back-end.herokuapp.com/auth/request`, query)
         .then(response => {
@@ -87,7 +95,7 @@ class Loginbody extends Component {
             loading: false,
           })
           const { authentication_token } = response.data;
-          let user={email:email, id:response.data.id}
+          let user = { email: email, id: response.data.id }
           sessionService.saveSession({ authentication_token })
             .then(() => {
               sessionService.saveUser(user)
@@ -103,8 +111,9 @@ class Loginbody extends Component {
 
   responseFacebook = (response) => {
   }
-  captchaReady(value){
-    this.setState({captcha: value})
+  captchaReady(value) {
+    this.setState({ captcha: value })
+    console.log(value)
   }
 
   render() {
@@ -118,75 +127,77 @@ class Loginbody extends Component {
     return (
       <div>
         {this.state.loading ? <LoadingSpinner /> :
-          <div className="container">
-            <div className="container container-login">
-              <div className="row">
-                <div className="col-sm-12 log-text">
-                  <h2>Ingresa</h2>
+          !this.state.ingreso_datos ?
+            <div className="container">
+              <div className="container container-login">
+                <div className="row">
+                  <div className="col-sm-12 log-text">
+                    <h2>Ingresa</h2>
+                  </div>
                 </div>
-              </div>
-              <div className="row">
+                <div className="row">
 
-                <div className="col-sm-8 offset-sm-2 myform-cont">
-                  {this.state.hasError &&
-                    <div className="alert alert-danger">
-                      <strong>Error:</strong> {this.state.errors}
+                  <div className="col-sm-8 offset-sm-2 myform-cont">
+                    {this.state.hasError &&
+                      <div className="alert alert-danger">
+                        <strong>Error:</strong> {this.state.errors}
+                      </div>
+                    }
+                    <div className="form-group">
+                      <input
+                        className="form-control"
+                        name="email"
+                        label="Email"
+                        type="email"
+                        placeholder="e-mail"
+                        onChange={this.onChange}
+                      />
+
                     </div>
-                  }
-                  <div className="form-group">
-                    <input
-                      className="form-control"
-                      name="email"
-                      label="Email"
-                      type="email"
-                      placeholder="e-mail"
-                      onChange={this.onChange}
+                    <div className="form-group">
+                      <input
+                        className="form-control"
+                        name="password"
+                        label="Password"
+                        type="password"
+                        placeholder="Contraseña"
+                        onChange={this.onChange}
+                      />
+                    </div>
+                    <ReCAPTCHA
+                      sitekey="6LcX934UAAAAALOU8sh9OLYMalikkAswZrWLduDw"
+                      onChange={this.captchaReady}
                     />
-
+                    <SubmitButton />
+                    <div class="g-recaptcha" data-sitekey="6LcX934UAAAAALOU8sh9OLYMalikkAswZrWLduDw"></div>
                   </div>
-                  <div className="form-group">
-                    <input
-                      className="form-control"
-                      name="password"
-                      label="Password"
-                      type="password"
-                      placeholder="Contraseña"
-                      onChange={this.onChange}
-                    />
-                  </div>
-                  <ReCAPTCHA
-                  sitekey="6LcX934UAAAAALOU8sh9OLYMalikkAswZrWLduDw"
-                  onChange={this.captchaReady}
-                  />
-                  <SubmitButton />
-                  <div class="g-recaptcha" data-sitekey="6LcX934UAAAAALOU8sh9OLYMalikkAswZrWLduDw"></div>
                 </div>
-              </div>
-              <div className="row">
-                <div className="col-sm-12 mysocial-login log-text">
-                  <h3> Ó ingresa con: </h3>
-                  <div className="mysocial-login-buttons">
-                    <GoogleLogin className="mybtn-social" tag="a" type=""
-                      clientId="373142330185-hko54qc5fakooerj23p6n1494vj768h4.apps.googleusercontent.com"
-                      onSuccess={this.responseGoogle}
-                      onFailure={this.responseGoogle}                    >
-                      <i className="fab fa-google"></i>
-                    </GoogleLogin>
+                <div className="row">
+                  <div className="col-sm-12 mysocial-login log-text">
+                    <h3> Ó ingresa con: </h3>
+                    <div className="mysocial-login-buttons">
+                      <GoogleLogin className="mybtn-social" tag="a" type=""
+                        clientId="373142330185-hko54qc5fakooerj23p6n1494vj768h4.apps.googleusercontent.com"
+                        onSuccess={this.responseGoogle}
+                        onFailure={this.responseGoogle}                    >
+                        <i className="fab fa-google"></i>
+                      </GoogleLogin>
+                    </div>
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-sm-12 log-text">
+                    <hr></hr>
+                  </div>
+                  <div className="col-sm-8 offset-sm-2 myform-cont">
+                    <Link className="link" to="/signup">
+                      <button type="submit" className="mybtn">Registrate</button>
+                    </Link>
                   </div>
                 </div>
               </div>
-              <div className="row">
-                <div className="col-sm-12 log-text">
-                  <hr></hr>
-                </div>
-                <div className="col-sm-8 offset-sm-2 myform-cont">
-                  <Link className="link" to="/signup">
-                    <button type="submit" className="mybtn">Registrate</button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
+            </div> :
+            <AuthMail user={this.state.user} />
         }
       </div>
     );
