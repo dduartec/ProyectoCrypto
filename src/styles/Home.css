@@ -1,0 +1,176 @@
+    .home-profile-img {
+    width: 100px;
+    height: 80px;
+  }
+  .profile2 {
+    background-image: url(http://recursospracticos.com/wp-content/uploads/2017/10/Sin-foto-de-perfil-en-Facebook.jpg);
+    width: 10%;    
+    padding: 30px;
+    background-position: left;
+    background-size: contain;
+    background-repeat: no-repeat;
+    justify-self: left;
+    align-items: left;
+  }
+
+  
+  .container-home{
+    background-color:rgba(255, 255, 255, 0.8);
+    text-align: left;
+    align-items: left;
+    width: 100%;
+    border-style: solid;
+    border-radius: 5px;
+    border-color: #4d636f;
+    padding: 5px;
+    margin-top: 20px;
+  }
+  .container-home2{
+    background-color:rgba(255, 255, 255, 0.8);
+    width: 90%;
+    border-style: solid;
+    border-radius: 5px;
+    border-color: #4d636f;
+    padding: 5px;
+    margin-top: 20px;
+    margin-right: 20px;
+    margin-left: 20px;
+  }
+  .container-comments{
+    background-color:rgba(255, 255, 255, 0.8);
+    width: 98%;
+    border-style: solid;
+    border-radius: 5px;
+    border-color: #4d636f;
+    padding: 5px;
+    margin-top: 20px;
+    margin-right: 20px;
+  }
+  .container-home3{
+    background-color:rgba(255, 255, 255, 0.8);
+    text-align: left;
+    align-items: left;
+    width: 20%;
+    border-style: solid;
+    border-radius: 0px;
+    border-color: white;
+    padding: 5px;
+    margin-top: 20px;
+    margin-right: 20px;
+    margin-left: 20px;
+  }
+  .form-control{
+    font-size: 16px;
+    border-style: solid;
+    border-color: #4d636f;
+    border-width: 2px;
+    border-radius: 20px;
+
+}
+.myform-cont{
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+.log-text{
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
+.posi {
+    float: left;
+}
+.posd {
+    float: right;
+}
+.mnp{
+    float: left;
+}
+.btn{
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.pf-g{
+    background-color: aqua;
+    align-items: left;
+    text-align: left;
+}
+.in-pos{
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+.pb{
+    margin-top: 20px;
+    margin-bottom:20px;
+}
+.sel{
+    width: 150px;
+    float: left;
+}
+
+.post-profile-img{
+    float: left;
+    width: 70px;
+    height: 50px;
+}
+.title{
+    margin-left: 80px;
+}
+.panel-heading{
+    margin-bottom: 30px;
+}
+.buttons{
+    margin-top: 10px;
+}
+.panel-default{
+    padding: 5px;
+}
+.comment-txt{
+    margin: 5px;
+}
+.pin {
+   color:red;
+  }
+  .map{
+      margin-top: 60px;
+  }
+  .link {
+    color: black;
+  }
+  .link:hover {
+     color: blue;
+  }
+  input[type="radio"] {
+    display: none;
+  }
+  
+  .lb {
+    color:darkgrey;
+  }
+  
+  .clasificacion {
+    direction: rtl;
+    unicode-bidi: bidi-override;
+    font-size: 50px;
+  }
+  
+  label:hover,
+  label:hover ~ label {
+    color: #4d636f;
+  }
+  
+  input[type="radio"]:checked ~ label {
+    color: #4d636f;
+  }
+  .cal-panel{
+      margin-top: 20px;
+  }
+  .solbtn{
+    width:150px;
+    background-color: #4d636f;
+    border-style: none;
+    color: white;
+    height: 35px;
+    margin-top: 10px;
+
+  }
