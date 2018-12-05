@@ -10,6 +10,7 @@ import axios from 'axios';
 import { GoogleLogin } from 'react-google-login';
 import FacebookLogin from 'react-facebook-login';
 import LoadingSpinner from './LoadingSpinner';
+import ReCAPTCHA from "react-google-recaptcha";
 
 
 class Loginbody extends Component {
@@ -24,7 +25,8 @@ class Loginbody extends Component {
         email: '',
         password: ''
       },
-      loading: false
+      loading: false,
+      captcha: false
     };
 
     this.onSubmit = this.onSubmit.bind(this);
@@ -74,7 +76,7 @@ class Loginbody extends Component {
   }
   responseGoogle = (response,history) => {
     const {id_token} = response.tokenObj;
-    
+
     const {email}=response.profileObj
     const {name}=response.profileObj;
     let query={"id_token":id_token,"email":email,"name":name};
@@ -83,7 +85,7 @@ class Loginbody extends Component {
         .then(response => {
           this.setState({
             loading: false,
-          })        
+          })
           const { authentication_token } = response.data;
           let user={email:email, id:response.data.id}
           sessionService.saveSession({ authentication_token })
@@ -100,6 +102,9 @@ class Loginbody extends Component {
   }
 
   responseFacebook = (response) => {
+  }
+  captchaReady(value){
+    this.setState({captcha: value})
   }
 
   render() {
@@ -149,7 +154,12 @@ class Loginbody extends Component {
                       onChange={this.onChange}
                     />
                   </div>
+                  <ReCAPTCHA
+                  sitekey="6LcX934UAAAAALOU8sh9OLYMalikkAswZrWLduDw"
+                  onChange={this.captchaReady}
+                  />
                   <SubmitButton />
+                  <div class="g-recaptcha" data-sitekey="6LcX934UAAAAALOU8sh9OLYMalikkAswZrWLduDw"></div>
                 </div>
               </div>
               <div className="row">

@@ -5,7 +5,7 @@ OWSP : Cross-Site Scripting (XSS)
 codifican el contenido para prevenir XSS, como en Ruby 3.0 o
 React JS
 
-OWSP : perdida de control de acceso 
+OWSP : perdida de control de acceso
 -Implemente los mecanismos de control de acceso una vez y
 reutilícelo en toda la aplicación, incluyendo minimizar el control
 de acceso HTTP (CORS).
@@ -16,7 +16,7 @@ OWSP : Pérdida de Autenticación
 
 -servicio OAUTH
 
--integracioón captcha
+-integración captcha
 
 - Autenticación a doble factor.
 
