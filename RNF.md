@@ -11,6 +11,9 @@ reutilícelo en toda la aplicación, incluyendo minimizar el control
 de acceso HTTP (CORS).
 
 OWSP : Pérdida de Autenticación
+
+-autenticación por token
+
 -servicio OAUTH
 
 -integracioón captcha
