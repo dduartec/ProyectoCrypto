@@ -10,7 +10,9 @@ import { bindActionCreators } from 'redux';
 import * as sessionActions from '../actions/sessionActions';
 
 class Landingpage extends Component {
+
   render() {
+    
     if (this.props.authenticated) {
       return (
         <Redirect to={{
