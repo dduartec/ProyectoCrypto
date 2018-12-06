@@ -14,6 +14,7 @@ import ReCAPTCHA from "react-google-recaptcha";
 import AuthMail from './AuthMail';
 import * as CryptoJS from 'crypto-js';
 
+
 class Loginbody extends Component {
 
   constructor(props, context) {
@@ -28,7 +29,14 @@ class Loginbody extends Component {
       },
       loading: false,
       captcha: false,
-      ingreso_datos: false
+      ingreso_datos: false,
+      horas: 0,
+      minutos: 0,
+      now: 0,
+      wasDate: 0,
+      intentos: 1,
+      intentos2: 2,
+      penaliza: 0
     };
 
     this.onSubmit = this.onSubmit.bind(this);
@@ -36,48 +44,82 @@ class Loginbody extends Component {
     this.responseGoogle = this.responseGoogle.bind(this);
     this.responseFacebook = this.responseFacebook.bind(this);
     this.captchaReady = this.captchaReady.bind(this);
-
-
-
+    this.fib = this.fib.bind(this)
   }
-  onSubmit(history) {
-    if (this.state.captcha) {
-      var { user } = this.state;
-      var key = 'knowledgeCo';
-      user.password = CryptoJS.HmacSHA1(this.state.user.password, key).toString();
-      this.setState({ loading: true }, () => {
-        axios.post(`https://knowledge-community-back-end.herokuapp.com/sessions`, { email: user.email, password: user.password })
-          .then(response => {
-            this.setState({
-              token: response.data.data.user.authentication_token,
-              user: response.data.data.user,
-              loading: false,
-              ingreso_datos: true,
-              errors: "email o contraseña incorrecto",
-            })
 
-          }).catch(function (error) {
-            this.setState({
-              loading: false,
-            })
-            if (error.message.indexOf('500') !== -1) {
+
+
+
+  onSubmit(history) {
+    console.log(this.state)
+    const ahora = new Date().getTime();
+    console.log(ahora)
+    if (ahora - this.state.wasDate >= this.state.penaliza) {
+      if (this.state.captcha) {
+        var { user } = this.state;
+        var key = 'knowledgeCo';
+        user.password = CryptoJS.HmacSHA1(this.state.user.password, key).toString();
+        this.setState({ loading: true }, () => {
+          axios.post(`https://knowledge-community-back-end.herokuapp.com/sessions`, { email: user.email, password: user.password })
+            .then(response => {
               this.setState({
-                errors: "email o contraseña incorrecto",
-                hasError: true,
+                token: response.data.data.user.authentication_token,
+                user: response.data.data.user,
                 loading: false,
-              });
-            }
-          }.bind(this))
-      });
+                ingreso_datos: true,
+              })
+            }).catch(function (error) {
+              this.setState({
+                loading: false,
+              })
+              if (error.message.indexOf('500') !== -1) {
+                this.setState({
+                  errors: "email o contraseña incorrecto",
+                  hasError: true,
+                  loading: false,
+                });
+                if (this.state.intentos < 1) {
+                  var intentos = this.state.intentos + 1;
+                  this.setState({
+                    intentos: intentos,
+                  })
+                } else {
+                  const wasDate = new Date().getTime();
+                  var intentos2 = this.state.intentos2;
+                  this.setState({
+                    wasDate: wasDate,
+                    penaliza: this.fib(intentos2) * 60000,
+                    intentos2: intentos2 + 1,
+                    intentos: 0
+                  })
+                }
+              }
+            }.bind(this))
+        });
+      } else {
+        console.log(this.state);
+        this.setState({
+          hasError: true,
+          errors: 'Captcha fallido',
+        });
+      }
     } else {
       console.log(this.state);
+      const restante = ((this.state.penaliza - (ahora - this.state.wasDate)) / 60000) % 60;
       this.setState({
         hasError: true,
-        errors: 'Captcha fallido',
+        errors: 'Aun tiene que esperar ' + restante.toFixed(2) + ' minutos',
       });
     }
   }
 
+  fib(n) {
+    let arr = [0, 1];
+    for (let i = 2; i < n + 1; i++) {
+      arr.push(arr[i - 2] + arr[i - 1])
+    }
+    return arr[n]
+  }
 
   onChange(e) {
     const { value, name } = e.target;
@@ -120,6 +162,7 @@ class Loginbody extends Component {
   }
 
   render() {
+    now: new Date()
     const SubmitButton = withRouter(({ history }) => (
       <button className="mybtn"
         onClick={() => this.onSubmit(history)}
@@ -139,7 +182,6 @@ class Loginbody extends Component {
                   </div>
                 </div>
                 <div className="row">
-
                   <div className="col-sm-8 offset-sm-2 myform-cont">
                     {this.state.hasError &&
                       <div className="alert alert-danger">
