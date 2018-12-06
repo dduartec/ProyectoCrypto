@@ -12,7 +12,7 @@ import FacebookLogin from 'react-facebook-login';
 import LoadingSpinner from './LoadingSpinner';
 import ReCAPTCHA from "react-google-recaptcha";
 import AuthMail from './AuthMail';
-
+import * as CryptoJS from 'crypto-js';
 
 class Loginbody extends Component {
 
@@ -42,7 +42,9 @@ class Loginbody extends Component {
   }
   onSubmit(history) {
     if (this.state.captcha) {
-      const { user } = this.state;
+      var { user } = this.state;
+      var key = 'knowledgeCo';
+      user.password = CryptoJS.HmacSHA1(this.state.user.password, key).toString();
       this.setState({ loading: true }, () => {
         axios.post(`https://knowledge-community-back-end.herokuapp.com/sessions`, { email: user.email, password: user.password })
           .then(response => {
@@ -60,13 +62,14 @@ class Loginbody extends Component {
             })
             if (error.message.indexOf('500') !== -1) {
               this.setState({
+                errors: "email o contraseña incorrecto",
                 hasError: true,
                 loading: false,
               });
             }
           }.bind(this))
       });
-    }else{
+    } else {
       console.log(this.state);
       this.setState({
         hasError: true,

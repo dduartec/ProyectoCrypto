@@ -12,6 +12,7 @@ import axios from 'axios';
 import { GoogleLogin } from 'react-google-login';
 import FacebookLogin from 'react-facebook-login';
 import LoadingSpinner from './LoadingSpinner';
+import * as CryptoJS from 'crypto-js';
 
 class Registro extends Component {
   constructor(props, context) {
@@ -37,41 +38,48 @@ class Registro extends Component {
 
   }
   onSubmit(history) {
-    const { user } = this.state;
+    var key = 'knowledgeCo';
+    var { user } = this.state;
+    console.log(user.password);
+    console.log(user.password_confirmation);
+    user.password = CryptoJS.HmacSHA1(this.state.user.password, key).toString();
+    user.password_confirmation = CryptoJS.HmacSHA1(this.state.user.password_confirmation, key).toString();
+    console.log(user.password);
+    console.log(user.password_confirmation);
     this.setState({ loading: true }, () => {
-    axios.post(`https://knowledge-community-back-end.herokuapp.com/users`, { user })
-      .then(response => {
-        this.setState({
-          loading: false,
-        })
-        const { token } = response.data.authentication_token;
-        sessionService.saveSession({ token })
-          .then(() => {
-            sessionService.saveUser(response.data)
-              .then(() => {
-                history.push('/');
-              }).catch(err => console.error(err));
-          }).catch(err => console.error(err));
-      }).catch(function (error) {
-        if (user.name==="" || user.email==="" || user.password==="" || user.password_confirmation==="") {
+      axios.post(`https://knowledge-community-back-end.herokuapp.com/users`, { user })
+        .then(response => {
           this.setState({
-            hasError: 1,
             loading: false,
-          });
-        }
-        else if (user.password !== user.password_confirmation) {
-          this.setState({
-            hasError: 3,
-            loading: false,
-          });
-        }
-        else if (error.message.indexOf('422') !== -1) {
-          this.setState({
-            hasError: 2,
-            loading: false,
-          });
-        }
-      }.bind(this))
+          })
+          const { token } = response.data.authentication_token;
+          sessionService.saveSession({ token })
+            .then(() => {
+              sessionService.saveUser(response.data)
+                .then(() => {
+                  history.push('/');
+                }).catch(err => console.error(err));
+            }).catch(err => console.error(err));
+        }).catch(function (error) {
+          if (user.name === "" || user.email === "" || user.password === "" || user.password_confirmation === "") {
+            this.setState({
+              hasError: 1,
+              loading: false,
+            });
+          }
+          else if (user.password !== user.password_confirmation) {
+            this.setState({
+              hasError: 3,
+              loading: false,
+            });
+          }
+          else if (error.message.indexOf('422') !== -1) {
+            this.setState({
+              hasError: 2,
+              loading: false,
+            });
+          }
+        }.bind(this))
     })
   }
 
@@ -82,20 +90,20 @@ class Registro extends Component {
     this.setState({ user });
   }
 
-  responseGoogle = (response,history) => {
-    const {id_token} = response.tokenObj;
-    
-    const {email}=response.profileObj
-    const {name}=response.profileObj;
-    let query={"id_token":id_token,"email":email,"name":name};
+  responseGoogle = (response, history) => {
+    const { id_token } = response.tokenObj;
+
+    const { email } = response.profileObj
+    const { name } = response.profileObj;
+    let query = { "id_token": id_token, "email": email, "name": name };
     this.setState({ loading: true }, () => {
       axios.post(`https://knowledge-community-back-end.herokuapp.com/auth/request`, query)
         .then(response => {
           this.setState({
             loading: false,
-          })        
+          })
           const { authentication_token } = response.data;
-          let user={email:email}
+          let user = { email: email }
           sessionService.saveSession({ authentication_token })
             .then(() => {
               sessionService.saveUser(user)
@@ -112,7 +120,6 @@ class Registro extends Component {
   responseFacebook = (response) => {
     console.log(response);
   }
-
 
   render() {
 
@@ -133,83 +140,83 @@ class Registro extends Component {
       <div>
         <Navigation />
         <div className="body-login">
-        {this.state.loading ? <LoadingSpinner /> :
-          <div className="container">
-            <div className="container container-login">
-              <div className="row">
-                <div className="col-sm-12 log-text">
-                  <h2>Registrate</h2>
+          {this.state.loading ? <LoadingSpinner /> :
+            <div className="container">
+              <div className="container container-login">
+                <div className="row">
+                  <div className="col-sm-12 log-text">
+                    <h2>Registrate</h2>
+                  </div>
                 </div>
-              </div>
-              <div className="row">
-                <div className="col-sm-8 offset-sm-2 myform-cont">
-                  {this.state.hasError===1 &&
-                    <div className="alert alert-danger">
-                      <strong>Error:</strong> {this.state.errors}
-                    </div>
-                  }
+                <div className="row">
+                  <div className="col-sm-8 offset-sm-2 myform-cont">
+                    {this.state.hasError === 1 &&
+                      <div className="alert alert-danger">
+                        <strong>Error:</strong> {this.state.errors}
+                      </div>
+                    }
 
-                  {this.state.hasError===2 &&
-                    <div className="alert alert-danger">
-                      <strong>Error:</strong> {this.state.errors1}
+                    {this.state.hasError === 2 &&
+                      <div className="alert alert-danger">
+                        <strong>Error:</strong> {this.state.errors1}
+                      </div>
+                    }
+                    {this.state.hasError === 3 &&
+                      <div className="alert alert-danger">
+                        <strong>Error:</strong> {this.state.errors2}
+                      </div>
+                    }
+                    <div className="form-group">
+                      <input type="text" name="name" placeholder="Nombre" className="form-control" id="form-name" onChange={this.onChange} />
                     </div>
-                  }
-                  {this.state.hasError===3 &&
-                    <div className="alert alert-danger">
-                      <strong>Error:</strong> {this.state.errors2}
+                    <div className="form-group">
+                      <input type="text" name="email" placeholder="Email" className="form-control" id="form-email" onChange={this.onChange} />
                     </div>
-                  }
-                  <div className="form-group">
-                    <input type="text" name="name" placeholder="Nombre" className="form-control" id="form-name" onChange={this.onChange} />
-                  </div>
-                  <div className="form-group">
-                    <input type="text" name="email" placeholder="Email" className="form-control" id="form-email" onChange={this.onChange} />
-                  </div>
-                  <div className="form-group">
-                    <input type="password" name="password" placeholder="Contraseña" className="form-control" id="form-password" onChange={this.onChange} />
-                  </div>
-                  <div className="form-group">
-                    <input type="password" name="password_confirmation" placeholder="Confirmar contraseña" className="form-control" id="form-password_confirmation" onChange={this.onChange} />
-                  </div>
-                  <SubmitButton />
-                </div>
-              </div>
-              <div className="row">
-                <div className="col-sm-12 mysocial-login log-text">
-                  <h3> Ó registrate con: </h3>
-                  <div className="mysocial-login-buttons">
-                    <GoogleLogin className="mybtn-social" tag="a" type=""
-                      clientId="373142330185-sv6n2fga4rjtqbjre1cr8hlcj7md8u8h.apps.googleusercontent.com"
-                      onSuccess={this.responseGoogle}
-                      onFailure={this.responseGoogle}
-                    >
-                      <i className="fab fa-google"></i>
-                    </GoogleLogin>
-                    <FacebookLogin
-                    appId="337250857041345"
-                    autoLoad={false}
-                    fields="name,email,picture"
-                    callback={this.responseFacebook}
-                    cssclassName="mybtn-social-f"
-                    icon="fab fa-facebook-square"
-                    textButton=""
-                  ></FacebookLogin>
+                    <div className="form-group">
+                      <input type="password" name="password" placeholder="Contraseña" className="form-control" id="form-password" onChange={this.onChange} />
+                    </div>
+                    <div className="form-group">
+                      <input type="password" name="password_confirmation" placeholder="Confirmar contraseña" className="form-control" id="form-password_confirmation" onChange={this.onChange} />
+                    </div>
+                    <SubmitButton />
                   </div>
                 </div>
-              </div>
-              <div className="row">
-                <div className="col-sm-12 log-text">
-                  <hr></hr>
+                <div className="row">
+                  <div className="col-sm-12 mysocial-login log-text">
+                    <h3> Ó registrate con: </h3>
+                    <div className="mysocial-login-buttons">
+                      <GoogleLogin className="mybtn-social" tag="a" type=""
+                        clientId="373142330185-sv6n2fga4rjtqbjre1cr8hlcj7md8u8h.apps.googleusercontent.com"
+                        onSuccess={this.responseGoogle}
+                        onFailure={this.responseGoogle}
+                      >
+                        <i className="fab fa-google"></i>
+                      </GoogleLogin>
+                      <FacebookLogin
+                        appId="337250857041345"
+                        autoLoad={false}
+                        fields="name,email,picture"
+                        callback={this.responseFacebook}
+                        cssclassName="mybtn-social-f"
+                        icon="fab fa-facebook-square"
+                        textButton=""
+                      ></FacebookLogin>
+                    </div>
+                  </div>
                 </div>
-                <div className="col-sm-8 offset-sm-2 myform-cont">
-                  <Link className="link" to="/login">
-                    <button type="submit" className="mybtn">Iniciar Sesion</button>
-                  </Link>
+                <div className="row">
+                  <div className="col-sm-12 log-text">
+                    <hr></hr>
+                  </div>
+                  <div className="col-sm-8 offset-sm-2 myform-cont">
+                    <Link className="link" to="/login">
+                      <button type="submit" className="mybtn">Iniciar Sesion</button>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        }
+          }
         </div>
       </div>
     );
