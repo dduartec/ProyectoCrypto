@@ -86,6 +86,7 @@ class Loginbody extends Component {
     this.setState({ user });
   }
   responseGoogle = (response, history) => {
+    console.log(response);
     const { id_token } = response.tokenObj;
 
     const { email } = response.profileObj
