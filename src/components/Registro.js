@@ -23,64 +23,89 @@ class Registro extends Component {
       errors: "email, nombre o contraseña incorrecto",
       errors1: "El email ya se encuentra en uso",
       errors2: "La contraseña no coincide",
+      errors3: "Contraseña muy facil izi",
       user: {
         name: '',
         email: '',
         password: '',
         password_confirmation: ''
       },
-      loading: false
+      loading: false,
+      passwords: {},
+      validPass: false
     };
 
     this.onSubmit = this.onSubmit.bind(this);
     this.onChange = this.onChange.bind(this);
+    this.readTextFile = this.readTextFile.bind(this);
+    this.prueba = this.prueba.bind(this);
+    this.verifyPassword = this.verifyPassword.bind(this);
 
 
   }
+
+  verifyPassword() {
+    const { user, passwords } = this.state;
+    var i;
+    for (i = 0; i < 10001; i++) {
+      if (user.password == passwords[i].substring(0, passwords[i].length - 1)) {
+        this.setState({ validPass: true })
+      }
+    }
+  }
+
   onSubmit(history) {
     var key = 'knowledgeCo';
     var { user } = this.state;
-    console.log(user.password);
-    console.log(user.password_confirmation);
-    user.password = CryptoJS.HmacSHA1(this.state.user.password, key).toString();
-    user.password_confirmation = CryptoJS.HmacSHA1(this.state.user.password_confirmation, key).toString();
-    console.log(user.password);
-    console.log(user.password_confirmation);
-    this.setState({ loading: true }, () => {
-      axios.post(`https://knowledge-community-back-end.herokuapp.com/users`, { user })
-        .then(response => {
-          this.setState({
-            loading: false,
-          })
-          const { token } = response.data.authentication_token;
-          sessionService.saveSession({ token })
-            .then(() => {
-              sessionService.saveUser(response.data)
-                .then(() => {
-                  history.push('/');
-                }).catch(err => console.error(err));
-            }).catch(err => console.error(err));
-        }).catch(function (error) {
-          if (user.name === "" || user.email === "" || user.password === "" || user.password_confirmation === "") {
+    this.verifyPassword();
+    if (this.validPass) {
+      console.log(user.password);
+      console.log(user.password_confirmation);
+      user.password = CryptoJS.HmacSHA1(this.state.user.password, key).toString();
+      user.password_confirmation = CryptoJS.HmacSHA1(this.state.user.password_confirmation, key).toString();
+      console.log(user.password);
+      console.log(user.password_confirmation);
+      this.setState({ loading: true }, () => {
+        axios.post(`https://knowledge-community-back-end.herokuapp.com/users`, { user })
+          .then(response => {
             this.setState({
-              hasError: 1,
               loading: false,
-            });
-          }
-          else if (user.password !== user.password_confirmation) {
-            this.setState({
-              hasError: 3,
-              loading: false,
-            });
-          }
-          else if (error.message.indexOf('422') !== -1) {
-            this.setState({
-              hasError: 2,
-              loading: false,
-            });
-          }
-        }.bind(this))
-    })
+            })
+            const { token } = response.data.authentication_token;
+            sessionService.saveSession({ token })
+              .then(() => {
+                sessionService.saveUser(response.data)
+                  .then(() => {
+                    history.push('/');
+                  }).catch(err => console.error(err));
+              }).catch(err => console.error(err));
+          }).catch(function (error) {
+            if (user.name === "" || user.email === "" || user.password === "" || user.password_confirmation === "") {
+              this.setState({
+                hasError: 1,
+                loading: false,
+              });
+            }
+            else if (user.password !== user.password_confirmation) {
+              this.setState({
+                hasError: 3,
+                loading: false,
+              });
+            }
+            else if (error.message.indexOf('422') !== -1) {
+              this.setState({
+                hasError: 2,
+                loading: false,
+              });
+            }
+          }.bind(this))
+      })
+    } else {
+      this.setState({
+        hasError: 4,
+        loading: false,
+      });
+    }
   }
 
   onChange(e) {
@@ -119,6 +144,33 @@ class Registro extends Component {
 
   responseFacebook = (response) => {
     console.log(response);
+  }
+
+  componentDidMount() {
+    this.readTextFile('https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10k-most-common.txt');
+  }
+
+  readTextFile = file => {
+    var rawFile = new XMLHttpRequest();
+    rawFile.open("GET", file, false);
+    rawFile.onreadystatechange = () => {
+      if (rawFile.readyState === 4) {
+        if (rawFile.status === 200 || rawFile.status == 0) {
+          var allText = rawFile.responseText;
+          var words = allText.split("\n")
+          this.setState({
+            passwords: words
+          });
+        }
+      }
+    };
+    rawFile.send(null);
+  };
+
+  prueba() {
+    const { passwords } = this.state
+    console.log(typeof passwords);
+    console.log(passwords);
   }
 
   render() {
@@ -164,6 +216,11 @@ class Registro extends Component {
                     {this.state.hasError === 3 &&
                       <div className="alert alert-danger">
                         <strong>Error:</strong> {this.state.errors2}
+                      </div>
+                    }
+                    {this.state.hasError === 4 &&
+                      <div className="alert alert-danger">
+                        <strong>Error:</strong> {this.state.errors3}
                       </div>
                     }
                     <div className="form-group">
