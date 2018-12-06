@@ -22,22 +22,41 @@ class Registro extends Component {
       errors: "email, nombre o contraseña incorrecto",
       errors1: "El email ya se encuentra en uso",
       errors2: "La contraseña no coincide",
+      errors3: "Contraseña muy facil izi",
       user: {
         name: '',
         email: '',
         password: '',
         password_confirmation: ''
       },
-      loading: false
+      loading: false,
+      passwords:{},
+      validPass: false
     };
 
     this.onSubmit = this.onSubmit.bind(this);
     this.onChange = this.onChange.bind(this);
+    this.readTextFile = this.readTextFile.bind(this);
+    this.prueba = this.prueba.bind(this);
+    this.verifyPassword = this.verifyPassword.bind(this);
 
 
   }
+
+  verifyPassword(){
+    const { user, passwords } = this.state;
+    var i;
+    for(i = 0; i < 10001;i++){
+      if(user.password == passwords[i].substring(0,passwords[i].length-1)){
+        this.setState({validPass: true})
+      }
+    }
+  }
+
   onSubmit(history) {
-    const { user } = this.state;
+    const { user, passwords } = this.state;
+    this.verifyPassword()
+    if(this.validPass){
     this.setState({ loading: true }, () => {
     axios.post(`https://knowledge-community-back-end.herokuapp.com/users`, { user })
       .then(response => {
@@ -72,7 +91,10 @@ class Registro extends Component {
           });
         }
       }.bind(this))
-    })
+    })}else{this.setState({
+      hasError: 4,
+      loading: false,
+    });}
   }
 
   onChange(e) {
@@ -84,7 +106,7 @@ class Registro extends Component {
 
   responseGoogle = (response,history) => {
     const {id_token} = response.tokenObj;
-    
+
     const {email}=response.profileObj
     const {name}=response.profileObj;
     let query={"id_token":id_token,"email":email,"name":name};
@@ -93,7 +115,7 @@ class Registro extends Component {
         .then(response => {
           this.setState({
             loading: false,
-          })        
+          })
           const { authentication_token } = response.data;
           let user={email:email}
           sessionService.saveSession({ authentication_token })
@@ -113,6 +135,32 @@ class Registro extends Component {
     console.log(response);
   }
 
+  componentDidMount() {
+		this.readTextFile('https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10k-most-common.txt');
+	}
+
+  readTextFile = file => {
+		var rawFile = new XMLHttpRequest();
+		rawFile.open("GET", file, false);
+		rawFile.onreadystatechange = () => {
+			if (rawFile.readyState === 4) {
+				if (rawFile.status === 200 || rawFile.status == 0) {
+					var allText = rawFile.responseText;
+          var words = allText.split("\n")
+					this.setState({
+						passwords: words
+					});
+				}
+			}
+		};
+		rawFile.send(null);
+	};
+
+  prueba(){
+    const { passwords } = this.state
+    console.log(typeof passwords);
+    console.log(passwords);
+  }
 
   render() {
 
@@ -159,6 +207,11 @@ class Registro extends Component {
                       <strong>Error:</strong> {this.state.errors2}
                     </div>
                   }
+                  {this.state.hasError===4 &&
+                    <div className="alert alert-danger">
+                      <strong>Error:</strong> {this.state.errors3}
+                    </div>
+                  }
                   <div className="form-group">
                     <input type="text" name="name" placeholder="Nombre" className="form-control" id="form-name" onChange={this.onChange} />
                   </div>
@@ -172,6 +225,7 @@ class Registro extends Component {
                     <input type="password" name="password_confirmation" placeholder="Confirmar contraseña" className="form-control" id="form-password_confirmation" onChange={this.onChange} />
                   </div>
                   <SubmitButton />
+                  <button onClick={this.prueba}>Pruebas</button>
                 </div>
               </div>
               <div className="row">
